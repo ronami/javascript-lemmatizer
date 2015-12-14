@@ -5,12 +5,16 @@
 * by Takafumi Yamano
 */
 
+var _ = require('underscore');
+
 // extend String and define String#endsWith
 if (typeof String.endsWith !== "function") {
   String.prototype.endsWith = function(suffix) {
     return this.indexOf(suffix, this.length - suffix.length) !== -1;
   };
 }
+
+var dictionaries = {};
 
 // Lemmatizer constructor
 var Lemmatizer = function() {
@@ -155,7 +159,7 @@ Lemmatizer.prototype = {
   load_wordnet_files: function(pos, list, exc) {
     var key_idx = pos + this.idx;
     this.open_file(key_idx, list);
-    var key_exc = pos + this.exc; 
+    var key_exc = pos + this.exc;
     this.open_file(key_exc, exc);
   },
 
@@ -165,7 +169,7 @@ Lemmatizer.prototype = {
     _.each( this.fetch_data(key_idx), function(w) {
       self.wordlists[pos][w] = w;
     });
-    var key_exc = pos + this.exc; 
+    var key_exc = pos + this.exc;
     _.each( this.fetch_data(key_exc), function(item) {
       var w = item[0];
       var s = item[1];
@@ -174,22 +178,13 @@ Lemmatizer.prototype = {
   },
 
   open_file: function(key, file) {
-    if (!localStorage.getItem(key)) {
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET", file, false);
-      xhr.send();
-      var data = xhr.responseText;
-      this.store_data(key, data);
+    if (!dictionaries[key]) {
+      dictionaries[key] = require(file);
     }
   },
 
-  store_data: function(key, data) {
-    localStorage.setItem(key, data);
-  },
-
   fetch_data: function(key) {
-    var data = JSON.parse(localStorage.getItem(key));
-    return data;
+    return dictionaries[key];
   },
   // end of set up dictionary data
 
@@ -425,3 +420,5 @@ Lemmatizer.prototype = {
     return result;
   }
 };
+
+module.exports = Lemmatizer;
